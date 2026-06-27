@@ -10,6 +10,39 @@ import { reconcileSubscription } from '../services/subscriptions';
 
 export const paymentsRouter = Router();
 
+// GET /api/payments/subscription — the user's current subscription (active
+// preferred, else the most recent), for the dashboard.
+paymentsRouter.get('/subscription', requireAuth, async (req, res, next) => {
+  try {
+    const active = await prisma.subscription.findFirst({
+      where: { userId: req.user!.sub, status: 'active' },
+      orderBy: { createdAt: 'desc' },
+    });
+    const sub =
+      active ??
+      (await prisma.subscription.findFirst({
+        where: { userId: req.user!.sub },
+        orderBy: { createdAt: 'desc' },
+      }));
+
+    if (!sub) return res.json({ subscription: null });
+    res.json({
+      subscription: {
+        id: sub.id,
+        plan: sub.plan,
+        billing: sub.billing,
+        status: sub.status,
+        amountHalalas: sub.amountHalalas,
+        currency: sub.currency,
+        currentPeriodEnd: sub.currentPeriodEnd,
+        createdAt: sub.createdAt,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const subscribeSchema = z.object({
   plan: z.enum(['starter', 'pro']),
   billing: z.enum(['monthly', 'annual']),

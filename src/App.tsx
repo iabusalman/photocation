@@ -6,6 +6,7 @@ import Pricing from "./pages/Pricing";
 import Analyze from "./pages/Analyze";
 import Checkout from "./pages/Checkout";
 import PaymentCallback from "./pages/PaymentCallback";
+import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/" component={Home} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/analyze" component={Analyze} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/checkout" component={Checkout} />
           <Route path="/payment/callback" component={PaymentCallback} />
           <Route path="/login" component={Login} />

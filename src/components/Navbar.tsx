@@ -61,7 +61,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-2 md:flex">
             {user ? (
               <>
-                <Link href="/analyze" className="rounded-full px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                <Link href="/dashboard" className="rounded-full px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
                   {user.name || user.email}
                   <span className="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">
                     {user.plan}

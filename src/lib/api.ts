@@ -69,6 +69,17 @@ export interface AnalysisResult {
   createdAt: string;
 }
 
+export interface Subscription {
+  id: string;
+  plan: "starter" | "pro";
+  billing: "monthly" | "annual";
+  status: "pending" | "active" | "cancelled";
+  amountHalalas: number;
+  currency: string;
+  currentPeriodEnd: string | null;
+  createdAt: string;
+}
+
 export interface SubscribeInit {
   subscriptionId: string;
   publishableKey: string | null;
@@ -102,6 +113,9 @@ export const api = {
       body: JSON.stringify({ image, mediaType }),
     }),
   history: () => request<{ analyses: AnalysisResult[] }>("/api/analyze/history"),
+
+  subscription: () =>
+    request<{ subscription: Subscription | null }>("/api/payments/subscription"),
 
   subscribe: (plan: "starter" | "pro", billing: "monthly" | "annual") =>
     request<SubscribeInit>("/api/payments/subscribe", {
