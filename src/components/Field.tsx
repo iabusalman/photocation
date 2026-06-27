@@ -5,11 +5,23 @@ export default function Field({
   type = "text",
   placeholder,
   icon,
+  value,
+  onChange,
+  name,
+  required,
+  autoComplete,
+  minLength,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
   icon?: ReactNode;
+  value?: string;
+  onChange?: (v: string) => void;
+  name?: string;
+  required?: boolean;
+  autoComplete?: string;
+  minLength?: number;
 }) {
   return (
     <label className="block">
@@ -20,7 +32,17 @@ export default function Field({
             {icon}
           </span>
         )}
-        <input type={type} placeholder={placeholder} className={`field ${icon ? "pr-10" : ""}`} />
+        <input
+          type={type}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+          required={required}
+          autoComplete={autoComplete}
+          minLength={minLength}
+          className={`field ${icon ? "pr-10" : ""}`}
+        />
       </div>
     </label>
   );

@@ -26,8 +26,9 @@ model User {
   email        String         @unique
   name         String?
   avatarUrl    String?
-  provider     String
+  provider     String // "google" | "apple" | "email"
   providerId   String
+  passwordHash String? // set only for email/password accounts
 
   plan         String         @default("free")
   usageCount   Int            @default(0)

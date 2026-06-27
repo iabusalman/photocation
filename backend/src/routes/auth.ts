@@ -1,15 +1,75 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { verifyGoogleIdToken } from '../services/google';
 import { verifyAppleIdentityToken } from '../services/apple';
 import { upsertUserFromIdentity, publicUser } from '../services/users';
 import { signSession } from '../lib/jwt';
 import { requireAuth } from '../middleware/auth';
 import { prisma } from '../prisma';
-import { notFound } from '../lib/http';
+import { HttpError, notFound, unauthorized } from '../lib/http';
 import { getQuota } from '../services/quota';
 
 export const authRouter = Router();
+
+// ── Email + password ─────────────────────────────────────
+const registerSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  email: z.string().email(),
+  password: z.string().min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
+});
+
+// POST /api/auth/register — create an email/password account.
+authRouter.post('/register', async (req, res, next) => {
+  try {
+    const { name, email, password } = registerSchema.parse(req.body);
+    const lower = email.toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email: lower } });
+    if (existing) throw new HttpError(409, 'البريد الإلكتروني مستخدم بالفعل');
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email: lower,
+        name: name ?? null,
+        provider: 'email',
+        providerId: lower,
+        passwordHash,
+      },
+    });
+    const token = signSession({ sub: user.id, email: user.email, name: user.name });
+    res.status(201).json({ token, user: publicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+// POST /api/auth/login — email/password sign-in.
+authRouter.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body);
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+    // Generic message — don't reveal whether the email exists.
+    if (!user || !user.passwordHash) {
+      throw unauthorized('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+    }
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) throw unauthorized('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+
+    const token = signSession({ sub: user.id, email: user.email, name: user.name });
+    res.json({ token, user: publicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
 
 const googleSchema = z.object({ idToken: z.string().min(10) });
 

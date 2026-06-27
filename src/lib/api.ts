@@ -105,6 +105,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ identityToken, fullName }),
     }),
+  register: (name: string, email: string, password: string) =>
+    request<{ token: string; user: User }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name: name || undefined, email, password }),
+    }),
+  login: (email: string, password: string) =>
+    request<{ token: string; user: User }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
   me: () => request<{ user: User; quota: Quota }>("/api/auth/me"),
 
   analyze: (image: string, mediaType: string) =>
