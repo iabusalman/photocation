@@ -1,0 +1,74 @@
+// Photocation database schema.
+// Dev uses SQLite for zero-setup. For production switch `provider` to
+// "postgresql" and point DATABASE_URL at your Postgres instance.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: SQLite has no native enum type. These string fields are constrained in
+// application code:
+//   User.provider          : "google" | "apple"
+//   User.plan              : "free" | "starter" | "pro"
+//   Subscription.billing   : "monthly" | "annual"
+//   Subscription.status    : "pending" | "active" | "cancelled"
+//   Analysis.status        : "succeeded" | "failed"
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  avatarUrl    String?
+  provider     String // "google" | "apple"
+  providerId   String
+
+  plan         String         @default("free") // free | starter | pro
+  // Usage counter for the current billing window and when it resets.
+  usageCount   Int            @default(0)
+  usageResetAt DateTime?
+
+  subscriptions Subscription[]
+  analyses      Analysis[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([provider, providerId])
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String
+  plan             String // starter | pro
+  billing          String // monthly | annual
+  status           String   @default("pending") // pending | active | cancelled
+  moyasarId        String?  @unique
+  amountHalalas    Int
+  currency         String   @default("SAR")
+  currentPeriodEnd DateTime?
+  rawResponse      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// One photo-geolocation analysis (search history entry).
+model Analysis {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  status      String   @default("succeeded") // succeeded | failed
+  country     String?
+  city        String?
+  lat         Float?
+  lng         Float?
+  confidence  Int? // 0-100
+  landmarks   String? // JSON array string
+  reasoning   String?
+  createdAt   DateTime @default(now())
+}

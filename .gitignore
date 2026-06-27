@@ -3,5 +3,14 @@ dist/
 .vite/
 *.log
 .env
+.env.tmp
 .DS_Store
 tsconfig.tsbuildinfo
+
+# Backend (Prisma / SQLite / fetched engine binaries)
+backend/dev.db
+backend/dev.db-journal
+backend/prisma/dev.db
+*.sqlite
+*.sqlite3
+backend/.engines/

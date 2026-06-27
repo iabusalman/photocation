@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Check, Sparkles, Zap, Building2, CreditCard, ShieldCheck } from "lucide-react";
 import Reveal from "../components/Reveal";
+import { useAuth } from "../lib/auth";
 
 const plans = [
   {
@@ -58,6 +59,19 @@ const plans = [
 
 export default function Pricing() {
   const [annual, setAnnual] = useState(true);
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Free plan → register; paid plans → checkout (or login first).
+  function choosePlan(planId: string) {
+    if (planId === "free") {
+      navigate(user ? "/analyze" : "/register");
+      return;
+    }
+    const billing = annual ? "annual" : "monthly";
+    const target = `/checkout?plan=${planId}&billing=${billing}`;
+    navigate(user ? target : "/login");
+  }
 
   return (
     <section className="relative overflow-hidden pt-32 pb-16 sm:pt-40">
@@ -147,12 +161,12 @@ export default function Pricing() {
                     <div className="mt-1 text-xs font-semibold text-accent-green">يُحاسب 348 ريال سنوياً</div>
                   )}
 
-                  <Link
-                    href="/register"
+                  <button
+                    onClick={() => choosePlan(p.id)}
                     className={`mt-6 ${p.highlight ? "btn-primary" : "btn-ghost"} w-full py-3`}
                   >
                     {p.cta}
-                  </Link>
+                  </button>
 
                   <ul className="mt-7 space-y-3">
                     {p.features.map((f) => (

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, LogOut } from "lucide-react";
 import Logo from "./Logo";
+import { useAuth } from "../lib/auth";
 
 const links = [
   { href: "/", label: "الرئيسية" },
@@ -13,6 +14,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [loc] = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -57,13 +59,29 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link href="/login" className="btn-ghost px-4 py-2 text-sm">
-              تسجيل الدخول
-            </Link>
-            <Link href="/register" className="btn-primary px-4 py-2 text-sm">
-              <Sparkles className="h-4 w-4" />
-              ابدأ مجاناً
-            </Link>
+            {user ? (
+              <>
+                <Link href="/analyze" className="rounded-full px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                  {user.name || user.email}
+                  <span className="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">
+                    {user.plan}
+                  </span>
+                </Link>
+                <button onClick={signOut} className="btn-ghost px-3 py-2 text-sm" aria-label="تسجيل الخروج">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="btn-ghost px-4 py-2 text-sm">
+                  تسجيل الدخول
+                </Link>
+                <Link href="/register" className="btn-primary px-4 py-2 text-sm">
+                  <Sparkles className="h-4 w-4" />
+                  ابدأ مجاناً
+                </Link>
+              </>
+            )}
           </div>
 
           <button

@@ -4,11 +4,13 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import Analyze from "./pages/Analyze";
+import Checkout from "./pages/Checkout";
+import PaymentCallback from "./pages/PaymentCallback";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 
-const bareRoutes = ["/login", "/register"];
+const bareRoutes = ["/login", "/register", "/payment/callback"];
 
 export default function App() {
   const [loc] = useLocation();
@@ -22,6 +24,8 @@ export default function App() {
           <Route path="/" component={Home} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/analyze" component={Analyze} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/payment/callback" component={PaymentCallback} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route component={NotFound} />
