@@ -1,46 +1,35 @@
-# Photocation
+# Photocation — واجهة الموقع (Frontend)
 
-منصة لاكتشاف وحجز جلسات ومواقع التصوير الاحترافي، مع تسجيل دخول عبر Google و Apple، ودفع إلكتروني عبر **Moyasar**.
+منصّة ذكاء اصطناعي تحدّد الموقع الجغرافي لأي صورة. هذه واجهة المستخدم الاحترافية
+(تصميم داكن فاخر، عربي RTL) المبنية كمعاينة قابلة للعرض قبل ربط الخلفية والمصادقة والدفع.
 
-A platform to discover and book professional photography sessions and locations, with Google & Apple sign-in and online payments via **Moyasar**.
+## التقنيات
+- **React 18 + TypeScript + Vite**
+- **Tailwind CSS** — نظام تصميم داكن مخصّص
+- **Framer Motion** — حركات وانتقالات ناعمة (تحترم `prefers-reduced-motion`)
+- **Wouter** — توجيه خفيف
+- **lucide-react** — الأيقونات
+- خطوط: IBM Plex Sans Arabic + Plus Jakarta Sans
 
-## بنية المشروع / Structure
+## الصفحات
+| المسار | الوصف |
+|--------|-------|
+| `/` | الصفحة الرئيسية (Hero + كيف تعمل + المزايا + الجمهور + رأي + CTA) |
+| `/analyze` | عرض تجريبي تفاعلي لتحليل صورة وإظهار الموقع على خريطة |
+| `/pricing` | باقات الاشتراك (مجاني / مبتدئ / محترف) بالريال السعودي |
+| `/login` · `/register` | المصادقة مع أزرار Google و Apple |
 
-```
-photocation/
-├── backend/     # Express + TypeScript + Prisma (REST API, auth, payments)
-└── frontend/    # Vite + React + TypeScript + Tailwind (UI)
-```
-
-## التشغيل السريع / Quick start
-
-### الخلفية / Backend
-
+## التشغيل محلياً
 ```bash
-cd backend
-cp .env.example .env        # املأ المتغيّرات / fill in the variables
+cd photocation
 npm install
-npm run db:push             # ينشئ قاعدة بيانات SQLite للتطوير
-npm run db:seed             # بيانات تجريبية / sample data
-npm run dev                 # http://localhost:4000
+npm run dev      # http://localhost:5173
+npm run build    # بناء الإنتاج إلى dist/
+npm run preview  # معاينة بناء الإنتاج
 ```
 
-### الواجهة / Frontend
-
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev                 # http://localhost:5173
-```
-
-## الميزات / Features
-
-- 🔐 تسجيل دخول بـ Google (OpenID / ID token) و Apple (Sign in with Apple)
-- 💳 الدفع عبر بوّابة Moyasar مع تأكيد عبر Webhook والتحقق من الخادم
-- 📅 حجز جلسات التصوير وإدارة الحجوزات
-- 🗄️ Prisma ORM (SQLite للتطوير، قابل للتبديل إلى PostgreSQL للإنتاج)
-
-## المتغيّرات البيئية / Environment variables
-
-انظر `backend/.env.example` و `frontend/.env.example`.
+## الخطوات القادمة (قيد الانتظار)
+- ربط الخلفية (tRPC / Node) وقاعدة البيانات.
+- تفعيل تسجيل الدخول الفعلي عبر **Google OAuth** و **Apple Sign In**.
+- بوابة الدفع **Moyasar** (بطاقة · Apple Pay · مدى) بالريال السعودي.
+- الربط على دومين خاص (مثل `photoai.click`).
