@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+.vite
+.env
+.env.*
+backend
+*.log

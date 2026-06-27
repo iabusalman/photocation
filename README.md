@@ -58,6 +58,13 @@ npm run dev            # http://localhost:4000
 - 🧠 تحليل الصور بالذكاء الاصطناعي (Claude vision) لاستنتاج الموقع، مع حصّة استخدام حسب الباقة (10 / 100 / 1000).
 - 🗄️ Prisma ORM مع نماذج User / Subscription / Analysis.
 
+## النشر (Deployment)
+
+ثلاثة مسارات جاهزة (Render Blueprint، أو Vercel + Render، أو Docker Compose).
+انظر **[DEPLOYMENT.md](./DEPLOYMENT.md)**. الإنتاج يستخدم PostgreSQL عبر
+`backend/prisma/schema.prod.prisma`.
+
 ## المتغيّرات البيئية
 
-انظر `./.env.example` (الواجهة) و `backend/.env.example` (الخلفية).
+انظر `./.env.example` (الواجهة) و `backend/.env.example` (الخلفية)،
+و`.env.deploy.example` لنشر Docker.

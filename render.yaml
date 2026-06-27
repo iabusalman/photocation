@@ -1,0 +1,74 @@
+# Render blueprint — deploy the whole stack (Postgres + API + static frontend).
+# In Render: New + → "Blueprint" → pick this repo/branch. Then fill the
+# secret env vars marked `sync: false` (keys, URLs) in the dashboard.
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: photocation-db
+    databaseName: photocation
+    user: photocation
+    plan: free
+
+services:
+  # ── Backend API ────────────────────────────────────────
+  - type: web
+    name: photocation-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: photocation-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: ANALYZE_MODEL
+        value: claude-opus-4-8
+      - key: MOYASAR_API_BASE
+        value: https://api.moyasar.com/v1
+      # Set these in the dashboard:
+      - key: CORS_ORIGINS # e.g. https://photocation-web.onrender.com
+        sync: false
+      - key: PAYMENT_CALLBACK_URL # https://<frontend>/payment/callback
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: APPLE_CLIENT_ID
+        sync: false
+      - key: APPLE_BUNDLE_ID
+        sync: false
+      - key: MOYASAR_SECRET_KEY
+        sync: false
+      - key: MOYASAR_PUBLISHABLE_KEY
+        sync: false
+      - key: MOYASAR_WEBHOOK_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+  # ── Frontend (static SPA) ──────────────────────────────
+  - type: web
+    name: photocation-web
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE # https://photocation-api.onrender.com
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: VITE_APPLE_CLIENT_ID
+        sync: false
+      - key: VITE_APPLE_REDIRECT_URI # https://<frontend>/login
+        sync: false
+      - key: VITE_MOYASAR_PUBLISHABLE_KEY
+        sync: false

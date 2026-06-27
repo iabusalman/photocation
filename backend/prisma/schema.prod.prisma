@@ -1,0 +1,74 @@
+// Production Prisma schema — PostgreSQL.
+// Identical models to prisma/schema.prisma (the dev SQLite schema); only the
+// datasource provider differs. Models use plain string fields (no enums) so the
+// two providers stay in sync. Used by the Docker/Render build via:
+//   prisma generate --schema=prisma/schema.prod.prisma
+//   prisma db push  --schema=prisma/schema.prod.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// String fields constrained in application code:
+//   User.provider          : "google" | "apple"
+//   User.plan              : "free" | "starter" | "pro"
+//   Subscription.billing   : "monthly" | "annual"
+//   Subscription.status    : "pending" | "active" | "cancelled"
+//   Analysis.status        : "succeeded" | "failed"
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  avatarUrl    String?
+  provider     String
+  providerId   String
+
+  plan         String         @default("free")
+  usageCount   Int            @default(0)
+  usageResetAt DateTime?
+
+  subscriptions Subscription[]
+  analyses      Analysis[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([provider, providerId])
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String
+  plan             String
+  billing          String
+  status           String   @default("pending")
+  moyasarId        String?  @unique
+  amountHalalas    Int
+  currency         String   @default("SAR")
+  currentPeriodEnd DateTime?
+  rawResponse      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Analysis {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  status      String   @default("succeeded")
+  country     String?
+  city        String?
+  lat         Float?
+  lng         Float?
+  confidence  Int?
+  landmarks   String?
+  reasoning   String?
+  createdAt   DateTime @default(now())
+}

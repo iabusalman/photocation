@@ -1,0 +1,66 @@
+# Self-hosting Photocation (Postgres + API + web).
+#   docker compose up --build
+# Then open http://localhost:8080  (API on http://localhost:4000)
+#
+# Fill secrets in a `.env` next to this file (see .env.deploy.example), or edit
+# the values below. The VITE_* values are baked into the web image at build time.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: photocation
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-photocation}
+      POSTGRES_DB: photocation
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U photocation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://photocation:${POSTGRES_PASSWORD:-photocation}@db:5432/photocation
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-value}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      PAYMENT_CALLBACK_URL: ${PAYMENT_CALLBACK_URL:-http://localhost:8080/payment/callback}
+      ANALYZE_MODEL: ${ANALYZE_MODEL:-claude-opus-4-8}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-}
+      MOYASAR_SECRET_KEY: ${MOYASAR_SECRET_KEY:-}
+      MOYASAR_PUBLISHABLE_KEY: ${MOYASAR_PUBLISHABLE_KEY:-}
+      MOYASAR_WEBHOOK_SECRET: ${MOYASAR_WEBHOOK_SECRET:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:4000}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_APPLE_CLIENT_ID: ${VITE_APPLE_CLIENT_ID:-}
+        VITE_APPLE_REDIRECT_URI: ${VITE_APPLE_REDIRECT_URI:-http://localhost:8080/login}
+        VITE_MOYASAR_PUBLISHABLE_KEY: ${VITE_MOYASAR_PUBLISHABLE_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
