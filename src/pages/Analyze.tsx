@@ -11,6 +11,7 @@ import {
   Lightbulb,
   MapPin,
   Gauge,
+  Navigation,
 } from "lucide-react";
 import Reveal from "../components/Reveal";
 import { api, type AnalysisResult } from "../lib/api";
@@ -235,6 +236,38 @@ export default function Analyze() {
                         </div>
                       )}
                     </div>
+
+                    {result.lat != null && result.lng != null && (
+                      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        {/* Interactive map (OpenStreetMap embed — no API key). */}
+                        <iframe
+                          title="الموقع على الخريطة"
+                          loading="lazy"
+                          className="h-56 w-full border-0"
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${result.lng - 0.03}%2C${result.lat - 0.03}%2C${result.lng + 0.03}%2C${result.lat + 0.03}&layer=mapnik&marker=${result.lat}%2C${result.lng}`}
+                        />
+                        <div className="grid grid-cols-2 gap-2 p-3">
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${result.lat}%2C${result.lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-ghost py-2 text-sm"
+                          >
+                            <MapPin className="h-4 w-4" /> خرائط Google
+                          </a>
+                          <a
+                            href={`https://maps.apple.com/?ll=${result.lat}%2C${result.lng}&q=${encodeURIComponent(
+                              result.city || "الموقع",
+                            )}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-ghost py-2 text-sm"
+                          >
+                            <Navigation className="h-4 w-4" /> خرائط Apple
+                          </a>
+                        </div>
+                      </div>
+                    )}
 
                     {result.landmarks.length > 0 && (
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
