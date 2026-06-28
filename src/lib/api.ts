@@ -170,6 +170,10 @@ export const api = {
 
   subscription: () =>
     request<{ subscription: Subscription | null }>("/api/payments/subscription"),
+  cancelSubscription: () =>
+    request<{ cancelled: boolean; plan: string }>("/api/payments/cancel", {
+      method: "POST",
+    }),
 
   subscribe: (plan: "starter" | "pro", billing: "monthly" | "annual") =>
     request<SubscribeInit>("/api/payments/subscribe", {

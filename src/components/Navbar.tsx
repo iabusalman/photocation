@@ -114,14 +114,37 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <div className="flex gap-2 px-1 pt-2">
-              <Link href="/login" className="btn-ghost flex-1">
-                دخول
-              </Link>
-              <Link href="/register" className="btn-primary flex-1">
-                ابدأ مجاناً
-              </Link>
-            </div>
+
+            {user ? (
+              <div className="mt-2 space-y-1 border-t border-slate-200 pt-2">
+                <div className="px-4 py-2 text-xs text-slate-500">
+                  {user.name || user.email} · {user.plan}
+                </div>
+                <Link href="/dashboard" className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                  حسابي
+                </Link>
+                {user.isAdmin && (
+                  <Link href="/admin" className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+                    <ShieldCheck className="h-4 w-4" /> لوحة الإدارة
+                  </Link>
+                )}
+                <button
+                  onClick={signOut}
+                  className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-right text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" /> تسجيل الخروج
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2 px-1 pt-2">
+                <Link href="/login" className="btn-ghost flex-1">
+                  دخول
+                </Link>
+                <Link href="/register" className="btn-primary flex-1">
+                  ابدأ مجاناً
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

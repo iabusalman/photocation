@@ -43,6 +43,24 @@ paymentsRouter.get('/subscription', requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /api/payments/cancel — cancel the user's subscription and revert to free.
+paymentsRouter.post('/cancel', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user!.sub;
+    await prisma.subscription.updateMany({
+      where: { userId, status: 'active' },
+      data: { status: 'cancelled' },
+    });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { plan: 'free', usageCount: 0, usageResetAt: null },
+    });
+    res.json({ cancelled: true, plan: 'free' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const subscribeSchema = z.object({
   plan: z.enum(['starter', 'pro']),
   billing: z.enum(['monthly', 'annual']),

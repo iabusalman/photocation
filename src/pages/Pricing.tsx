@@ -63,25 +63,34 @@ export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  // Live prices (in SAR) fetched from the backend, editable from /admin.
-  const [prices, setPrices] = useState<
-    Record<string, { monthly: number; annual: number }>
-  >({});
+  // Live plan config (prices in SAR + quota) fetched from the backend,
+  // editable from /admin so changes show up here immediately.
+  type Live = { monthly: number; annual: number; quota: number; windowDays: number };
+  const [prices, setPrices] = useState<Record<string, Live>>({});
   useEffect(() => {
     api
       .plans()
       .then((r) => {
-        const map: Record<string, { monthly: number; annual: number }> = {};
+        const map: Record<string, Live> = {};
         for (const pl of r.plans) {
           map[pl.id] = {
             monthly: pl.monthlyHalalas / 100,
             annual: pl.annualHalalas / 100,
+            quota: pl.quota,
+            windowDays: pl.windowDays ?? 30,
           };
         }
         setPrices(map);
       })
       .catch(() => {});
   }, []);
+
+  // Human limit text from a live quota, e.g. "100 صورة / شهر" or "صورة / يوم".
+  function limitText(quota: number, windowDays: number): string {
+    const period = windowDays <= 1 ? "يوم" : "شهر";
+    if (quota === 1) return `صورة واحدة / ${period}`;
+    return `${quota.toLocaleString("ar-SA")} صورة / ${period}`;
+  }
 
   // Free plan → register; paid plans → checkout (or login first).
   function choosePlan(planId: string) {
@@ -143,6 +152,15 @@ export default function Pricing() {
             const monthlyPrice = live?.monthly ?? p.monthly;
             const annualPrice = live?.annual ?? p.annual;
             const price = annual ? annualPrice : monthlyPrice;
+            const liveLimit = live ? limitText(live.quota, live.windowDays) : p.limit;
+            const features = live
+              ? [
+                  `${live.quota.toLocaleString("ar-SA")} عملية تحليل ${
+                    live.windowDays <= 1 ? "يومياً" : "شهرياً"
+                  }`,
+                  ...p.features.slice(1),
+                ]
+              : p.features;
             return (
               <Reveal key={p.id} delay={i * 0.08} className="h-full">
                 <div
@@ -168,7 +186,7 @@ export default function Pricing() {
                     </span>
                     <div>
                       <div className="font-extrabold text-slate-900">{p.name}</div>
-                      <div className="text-xs text-slate-500">{p.limit}</div>
+                      <div className="text-xs text-slate-500">{liveLimit}</div>
                     </div>
                   </div>
 
@@ -192,7 +210,7 @@ export default function Pricing() {
                   </button>
 
                   <ul className="mt-7 space-y-3">
-                    {p.features.map((f) => (
+                    {features.map((f) => (
                       <li key={f} className="flex items-start gap-2.5 text-sm text-slate-700">
                         <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-green-100 text-accent-green">
                           <Check className="h-3 w-3" />

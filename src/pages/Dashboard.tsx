@@ -9,6 +9,8 @@ import {
   ScanSearch,
   CalendarClock,
   ArrowUpRight,
+  LogOut,
+  Ban,
 } from "lucide-react";
 import Reveal from "../components/Reveal";
 import { api, type AnalysisResult, type Subscription } from "../lib/api";
@@ -30,11 +32,24 @@ function formatDate(iso: string | null): string {
 }
 
 export default function Dashboard() {
-  const { user, quota, loading } = useAuth();
+  const { user, quota, loading, signOut, refresh } = useAuth();
   const [, navigate] = useLocation();
   const [sub, setSub] = useState<Subscription | null>(null);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
   const [busy, setBusy] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function cancelSubscription() {
+    if (!confirm("هل تريد إلغاء اشتراكك والعودة للباقة المجانية؟")) return;
+    setCancelling(true);
+    try {
+      await api.cancelSubscription();
+      setSub(null);
+      await refresh();
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   useEffect(() => {
     if (loading) return;
@@ -90,6 +105,12 @@ export default function Dashboard() {
             <Link href="/analyze" className="btn-primary px-4 py-2 text-sm">
               <ScanSearch className="h-4 w-4" /> تحليل جديد
             </Link>
+            <button
+              onClick={signOut}
+              className="btn-ghost px-4 py-2 text-sm"
+            >
+              <LogOut className="h-4 w-4" /> تسجيل الخروج
+            </button>
           </div>
         </Reveal>
 
@@ -143,6 +164,14 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-500">
                     {(sub.amountHalalas / 100).toLocaleString("ar-SA")} ريال
                   </p>
+                  <button
+                    onClick={cancelSubscription}
+                    disabled={cancelling}
+                    className="btn-ghost mt-3 w-full border-red-200 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Ban className="h-4 w-4" />
+                    {cancelling ? "جارٍ الإلغاء…" : "إلغاء الاشتراك"}
+                  </button>
                 </div>
               ) : (
                 <div className="mt-4 flex flex-1 flex-col justify-between">
