@@ -7,6 +7,7 @@ import { authRouter } from './routes/auth';
 import { plansRouter } from './routes/plans';
 import { paymentsRouter } from './routes/payments';
 import { analyzeRouter } from './routes/analyze';
+import { adminRouter } from './routes/admin';
 import { errorHandler, notFoundHandler } from './middleware/error';
 
 export function createApp() {
@@ -34,6 +35,7 @@ export function createApp() {
   app.use('/api/plans', plansRouter);
   app.use('/api/payments', paymentsRouter);
   app.use('/api/analyze', analyzeRouter);
+  app.use('/api/admin', adminRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

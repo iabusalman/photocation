@@ -49,7 +49,9 @@ export async function reconcileSubscription(
       data: {
         plan: sub.plan as PlanId,
         usageCount: 0,
-        usageResetAt: periodEnd,
+        // Reset to null so getQuota() starts a fresh monthly usage window;
+        // the billing renewal date lives on the subscription (currentPeriodEnd).
+        usageResetAt: null,
       },
     });
   }

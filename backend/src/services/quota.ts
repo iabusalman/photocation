@@ -23,9 +23,10 @@ export async function getQuota(user: User): Promise<QuotaState> {
   let used = user.usageCount;
   let resetAt = user.usageResetAt;
 
-  if (plan.resets && resetAt && resetAt.getTime() <= Date.now()) {
-    // Window elapsed — reset the counter and schedule the next window.
-    resetAt = new Date(Date.now() + 30 * 24 * 3600 * 1000);
+  // Start a fresh window when none is set (new user) or the current one elapsed.
+  const elapsed = !resetAt || resetAt.getTime() <= Date.now();
+  if (elapsed) {
+    resetAt = new Date(Date.now() + plan.windowDays * 24 * 3600 * 1000);
     used = 0;
     await prisma.user.update({
       where: { id: user.id },

@@ -43,9 +43,42 @@ export interface User {
   email: string;
   name: string | null;
   avatarUrl: string | null;
-  provider: "google" | "apple";
+  provider: "google" | "apple" | "email";
   plan: "free" | "starter" | "pro";
   usageCount: number;
+  isAdmin?: boolean;
+}
+
+export interface AdminStats {
+  users: number;
+  analyses: number;
+  activeSubscriptions: number;
+  byPlan: Record<string, number>;
+  revenueHalalas: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string | null;
+  provider: string;
+  plan: "free" | "starter" | "pro";
+  usageCount: number;
+  usageResetAt: string | null;
+  analyses: number;
+  subscriptions: number;
+  isAdmin: boolean;
+  createdAt: string;
+}
+
+export interface AdminAnalysis {
+  id: string;
+  userEmail: string;
+  country: string | null;
+  city: string | null;
+  confidence: number | null;
+  landmarks: string[];
+  createdAt: string;
 }
 
 export interface Quota {
@@ -136,4 +169,23 @@ export const api = {
     request<{ activated: boolean; status: string; plan: string }>(
       `/api/payments/verify?id=${encodeURIComponent(id)}&subscriptionId=${encodeURIComponent(subscriptionId)}`,
     ),
+
+  // ── Admin ──────────────────────────────────────────────
+  adminStats: () => request<{ stats: AdminStats }>("/api/admin/stats"),
+  adminUsers: (q = "") =>
+    request<{ users: AdminUser[] }>(
+      `/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`,
+    ),
+  adminAnalyses: () =>
+    request<{ analyses: AdminAnalysis[] }>("/api/admin/analyses"),
+  adminUpdateUser: (
+    id: string,
+    data: { plan?: "free" | "starter" | "pro"; resetUsage?: boolean },
+  ) =>
+    request<{ user: { id: string; plan: string; usageCount: number } }>(
+      `/api/admin/users/${id}`,
+      { method: "PATCH", body: JSON.stringify(data) },
+    ),
+  adminDeleteUser: (id: string) =>
+    request<{ deleted: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" }),
 };

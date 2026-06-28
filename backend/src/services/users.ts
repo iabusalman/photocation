@@ -1,5 +1,6 @@
 import { Prisma, User } from '@prisma/client';
 import { prisma } from '../prisma';
+import { isAdminEmail } from '../env';
 import type { VerifiedIdentity } from './google';
 
 /**
@@ -43,6 +44,7 @@ export function publicUser(user: User) {
     provider: user.provider,
     plan: user.plan,
     usageCount: user.usageCount,
+    isAdmin: isAdminEmail(user.email),
     createdAt: user.createdAt,
   };
 }

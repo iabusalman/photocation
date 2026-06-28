@@ -24,6 +24,9 @@ const schema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   ANALYZE_MODEL: z.string().default('claude-opus-4-8'),
 
+  // Comma-separated list of emails granted admin access to /api/admin.
+  ADMIN_EMAILS: z.string().optional(),
+
   DATABASE_URL: z.string().default('file:./dev.db'),
 });
 
@@ -44,3 +47,13 @@ export const corsOrigins = env.CORS_ORIGINS.split(',')
 export const appleAudiences = [env.APPLE_CLIENT_ID, env.APPLE_BUNDLE_ID].filter(
   (v): v is string => Boolean(v),
 );
+
+const adminEmails = (env.ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+/** Whether an email address has admin privileges. */
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return !!email && adminEmails.includes(email.toLowerCase());
+}

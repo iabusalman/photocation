@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Sparkles, LogOut } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, ShieldCheck } from "lucide-react";
 import Logo from "./Logo";
 import { useAuth } from "../lib/auth";
 
@@ -61,6 +61,14 @@ export default function Navbar() {
           <div className="hidden items-center gap-2 md:flex">
             {user ? (
               <>
+                {user.isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+                  >
+                    <ShieldCheck className="h-4 w-4" /> الإدارة
+                  </Link>
+                )}
                 <Link href="/dashboard" className="rounded-full px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
                   {user.name || user.email}
                   <span className="ms-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">

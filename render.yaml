@@ -50,6 +50,8 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: ADMIN_EMAILS # your email(s) for /admin access, comma-separated
+        sync: false
 
   # ── Frontend (static SPA) ──────────────────────────────
   - type: web
