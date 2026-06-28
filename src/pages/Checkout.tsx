@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CreditCard, ShieldCheck, ArrowLeft } from "lucide-react";
+import { CreditCard, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react";
 import Reveal from "../components/Reveal";
 import MoyasarForm from "../components/MoyasarForm";
+import PayPalButtons from "../components/PayPalButtons";
 import { api, type SubscribeInit } from "../lib/api";
 import { useAuth } from "../lib/auth";
 
 const PLAN_NAMES: Record<string, string> = { starter: "مبتدئ", pro: "محترف" };
 
 export default function Checkout() {
-  const { user, loading } = useAuth();
+  const { user, loading, refresh } = useAuth();
   const [, navigate] = useLocation();
   const [init, setInit] = useState<SubscribeInit | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paid, setPaid] = useState(false);
 
   const params = new URLSearchParams(window.location.search);
   const plan = params.get("plan") === "pro" ? "pro" : "starter";
@@ -73,9 +75,41 @@ export default function Checkout() {
 
             <div className="card p-6">
               <h2 className="mb-4 text-xl font-extrabold text-slate-900">إتمام الدفع</h2>
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              {!error && !init && <p className="text-slate-500">جارٍ التحضير…</p>}
-              {init && <MoyasarForm init={init} />}
+              {paid ? (
+                <div className="py-6 text-center">
+                  <CheckCircle2 className="mx-auto h-14 w-14 text-accent-green" />
+                  <h3 className="mt-3 text-xl font-extrabold">تم تفعيل اشتراكك!</h3>
+                  <Link href="/analyze" className="btn-primary mt-5">
+                    ابدأ التحليل
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {!error && !init && <p className="text-slate-500">جارٍ التحضير…</p>}
+                  {init && (
+                    <>
+                      {/* بطاقة / مدى / Apple Pay عبر Moyasar */}
+                      <MoyasarForm init={init} />
+
+                      <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+                        <span className="h-px flex-1 bg-slate-200" />
+                        أو ادفع بالدولار عبر
+                        <span className="h-px flex-1 bg-slate-200" />
+                      </div>
+
+                      <PayPalButtons
+                        subscriptionId={init.subscriptionId}
+                        onSuccess={() => {
+                          setPaid(true);
+                          sessionStorage.removeItem("photocation.pendingSub");
+                          void refresh();
+                        }}
+                      />
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </Reveal>

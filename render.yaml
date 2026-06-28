@@ -52,6 +52,14 @@ services:
         sync: false
       - key: ADMIN_EMAILS # your email(s) for /admin access, comma-separated
         sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_ENV # sandbox | live
+        value: sandbox
+      - key: PAYPAL_SAR_TO_USD
+        value: "3.75"
 
   # ── Frontend (static SPA) ──────────────────────────────
   - type: web
@@ -73,4 +81,6 @@ services:
       - key: VITE_APPLE_REDIRECT_URI # https://<frontend>/login
         sync: false
       - key: VITE_MOYASAR_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_PAYPAL_CLIENT_ID
         sync: false

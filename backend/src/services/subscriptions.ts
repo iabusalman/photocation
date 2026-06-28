@@ -58,3 +58,36 @@ export async function reconcileSubscription(
 
   return { subscription: updatedSub, activated, amountMatches };
 }
+
+/**
+ * Activate a subscription by id (used by gateways other than Moyasar, e.g.
+ * PayPal, after the payment is verified server-side). Idempotent.
+ */
+export async function activateSubscription(
+  subscriptionId: string,
+  raw: unknown,
+) {
+  const sub = await prisma.subscription.findUnique({ where: { id: subscriptionId } });
+  if (!sub) throw notFound('Subscription not found');
+
+  const billing = sub.billing as Billing;
+  const periodEnd = new Date(
+    Date.now() + (billing === 'annual' ? 365 : 30) * 24 * 3600 * 1000,
+  );
+
+  const updatedSub = await prisma.subscription.update({
+    where: { id: subscriptionId },
+    data: {
+      status: 'active',
+      currentPeriodEnd: periodEnd,
+      rawResponse: JSON.stringify(raw),
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: sub.userId },
+    data: { plan: sub.plan as PlanId, usageCount: 0, usageResetAt: null },
+  });
+
+  return updatedSub;
+}

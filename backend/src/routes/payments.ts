@@ -6,7 +6,8 @@ import { requireAuth } from '../middleware/auth';
 import { badRequest, forbidden, notFound } from '../lib/http';
 import { checkoutAmount, getPlan, isPaidPlan } from '../services/plans';
 import { fetchPayment, MoyasarPayment } from '../services/moyasar';
-import { reconcileSubscription } from '../services/subscriptions';
+import { reconcileSubscription, activateSubscription } from '../services/subscriptions';
+import { createOrder, captureOrder, halalasToUsd } from '../services/paypal';
 
 export const paymentsRouter = Router();
 
@@ -155,6 +156,75 @@ paymentsRouter.post('/webhook', async (req, res, next) => {
 
     await reconcileSubscription(payment);
     res.json({ received: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── PayPal ─────────────────────────────────────────────────
+async function loadOwnedPendingSub(subscriptionId: string, userId: string) {
+  const sub = await prisma.subscription.findUnique({ where: { id: subscriptionId } });
+  if (!sub) throw notFound('Subscription not found');
+  if (sub.userId !== userId) throw forbidden();
+  return sub;
+}
+
+const paypalCreateSchema = z.object({ subscriptionId: z.string().min(1) });
+
+/**
+ * POST /api/payments/paypal/create-order
+ * Create a PayPal order for a pending subscription. Amount is converted from
+ * SAR to USD (PayPal has no SAR). Returns the PayPal order id.
+ */
+paymentsRouter.post('/paypal/create-order', requireAuth, async (req, res, next) => {
+  try {
+    const { subscriptionId } = paypalCreateSchema.parse(req.body);
+    const sub = await loadOwnedPendingSub(subscriptionId, req.user!.sub);
+    if (sub.status === 'active') throw badRequest('Subscription already active');
+
+    const usd = halalasToUsd(sub.amountHalalas);
+    const order = await createOrder(
+      usd,
+      `Photocation — اشتراك ${sub.plan} (${sub.billing})`,
+      subscriptionId,
+    );
+    res.json({ orderId: order.id, amountUsd: usd });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const paypalCaptureSchema = z.object({
+  orderId: z.string().min(1),
+  subscriptionId: z.string().min(1),
+});
+
+/**
+ * POST /api/payments/paypal/capture
+ * Capture an approved PayPal order, verify it server-side (status, custom_id,
+ * amount), then activate the subscription.
+ */
+paymentsRouter.post('/paypal/capture', requireAuth, async (req, res, next) => {
+  try {
+    const { orderId, subscriptionId } = paypalCaptureSchema.parse(req.body);
+    const sub = await loadOwnedPendingSub(subscriptionId, req.user!.sub);
+
+    const order = await captureOrder(orderId);
+    const unit = order.purchase_units?.[0];
+    const capture = unit?.payments?.captures?.[0];
+
+    const expectedUsd = halalasToUsd(sub.amountHalalas);
+    const ok =
+      order.status === 'COMPLETED' &&
+      unit?.custom_id === subscriptionId &&
+      capture?.status === 'COMPLETED' &&
+      capture?.amount?.currency_code === 'USD' &&
+      capture?.amount?.value === expectedUsd;
+
+    if (!ok) throw badRequest('PayPal payment could not be verified', order);
+
+    const updated = await activateSubscription(subscriptionId, order);
+    res.json({ activated: true, status: updated.status, plan: updated.plan });
   } catch (err) {
     next(err);
   }

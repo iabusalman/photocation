@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_APPLE_CLIENT_ID: string;
   readonly VITE_APPLE_REDIRECT_URI: string;
   readonly VITE_MOYASAR_PUBLISHABLE_KEY: string;
+  readonly VITE_PAYPAL_CLIENT_ID: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;
@@ -16,6 +17,7 @@ declare global {
     google?: any;
     AppleID?: any;
     Moyasar?: any;
+    paypal?: any;
   }
 }
 

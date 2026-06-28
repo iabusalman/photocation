@@ -185,6 +185,17 @@ export const api = {
       `/api/payments/verify?id=${encodeURIComponent(id)}&subscriptionId=${encodeURIComponent(subscriptionId)}`,
     ),
 
+  paypalCreateOrder: (subscriptionId: string) =>
+    request<{ orderId: string; amountUsd: string }>(
+      "/api/payments/paypal/create-order",
+      { method: "POST", body: JSON.stringify({ subscriptionId }) },
+    ),
+  paypalCapture: (orderId: string, subscriptionId: string) =>
+    request<{ activated: boolean; status: string; plan: string }>(
+      "/api/payments/paypal/capture",
+      { method: "POST", body: JSON.stringify({ orderId, subscriptionId }) },
+    ),
+
   // ── Admin ──────────────────────────────────────────────
   adminStats: () => request<{ stats: AdminStats }>("/api/admin/stats"),
   adminUsers: (q = "") =>

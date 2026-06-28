@@ -24,6 +24,13 @@ const schema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   ANALYZE_MODEL: z.string().default('claude-opus-4-8'),
 
+  // ── PayPal ───────────────────────────────────────────
+  PAYPAL_CLIENT_ID: z.string().optional(),
+  PAYPAL_SECRET: z.string().optional(),
+  PAYPAL_ENV: z.enum(['sandbox', 'live']).default('sandbox'),
+  // PayPal has no SAR; prices are converted to USD at this fixed peg.
+  PAYPAL_SAR_TO_USD: z.coerce.number().default(3.75),
+
   // Comma-separated list of emails granted admin access to /api/admin.
   ADMIN_EMAILS: z.string().optional(),
 
