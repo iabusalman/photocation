@@ -1,9 +1,23 @@
 import { Router } from 'express';
-import { PLANS } from '../services/plans';
+import { getAllPlans } from '../services/plans';
 
 export const plansRouter = Router();
 
-// GET /api/plans — the public plan catalogue (mirrors the Pricing page).
-plansRouter.get('/', (_req, res) => {
-  res.json({ plans: Object.values(PLANS) });
+// GET /api/plans — the public plan catalogue (prices/quotas from the DB).
+plansRouter.get('/', async (_req, res, next) => {
+  try {
+    const plans = await getAllPlans();
+    res.json({
+      plans: plans.map((p) => ({
+        id: p.id,
+        name: p.name,
+        quota: p.quota,
+        windowDays: p.windowDays,
+        monthlyHalalas: p.monthlyHalalas,
+        annualHalalas: p.annualHalalas,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
 });

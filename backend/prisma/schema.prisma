@@ -73,3 +73,16 @@ model Analysis {
   reasoning   String?
   createdAt   DateTime @default(now())
 }
+
+// Editable subscription plan config (prices/quotas), managed from /admin and
+// surfaced on the public Pricing page. Seeded with defaults on first boot.
+model Plan {
+  id             String   @id // "free" | "starter" | "pro"
+  name           String
+  quota          Int // analyses per window
+  windowDays     Int // usage window length (free = 1 day, paid = 30)
+  monthlyHalalas Int      @default(0) // price per month
+  annualHalalas  Int      @default(0) // per-month price when billed annually
+  sortOrder      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}

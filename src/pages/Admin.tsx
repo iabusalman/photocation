@@ -9,6 +9,9 @@ import {
   RotateCcw,
   Search,
   ShieldCheck,
+  Tag,
+  Save,
+  Check,
 } from "lucide-react";
 import Reveal from "../components/Reveal";
 import {
@@ -16,6 +19,7 @@ import {
   type AdminStats,
   type AdminUser,
   type AdminAnalysis,
+  type PlanDTO,
 } from "../lib/api";
 import { useAuth } from "../lib/auth";
 
@@ -39,25 +43,43 @@ export default function Admin() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [analyses, setAnalyses] = useState<AdminAnalysis[]>([]);
+  const [plans, setPlans] = useState<PlanDTO[]>([]);
+  const [savedPlan, setSavedPlan] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function load(search = "") {
     try {
-      const [s, u, a] = await Promise.all([
+      const [s, u, a, p] = await Promise.all([
         api.adminStats(),
         api.adminUsers(search),
         api.adminAnalyses(),
+        api.adminPlans(),
       ]);
       setStats(s.stats);
       setUsers(u.users);
       setAnalyses(a.analyses);
+      setPlans(p.plans);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
+  }
+
+  // Local edits to plan fields. Prices are entered in SAR, stored in halalas.
+  function editPlan(id: string, field: "monthlyHalalas" | "annualHalalas" | "quota", value: number) {
+    setPlans((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  }
+  async function savePlan(p: PlanDTO) {
+    await api.adminUpdatePlan(p.id, {
+      quota: p.quota,
+      monthlyHalalas: p.monthlyHalalas,
+      annualHalalas: p.annualHalalas,
+    });
+    setSavedPlan(p.id);
+    setTimeout(() => setSavedPlan(null), 2000);
   }
 
   useEffect(() => {
@@ -144,6 +166,78 @@ export default function Admin() {
             ))}
           </div>
         )}
+
+        {/* pricing editor */}
+        <Reveal className="mt-10">
+          <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold text-slate-900">
+            <Tag className="h-6 w-6 text-brand-600" /> الأسعار والباقات
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            عدّل السعر (بالريال) أو الحصّة، واضغط حفظ — يظهر فوراً في صفحة الأسعار وكل مكان.
+          </p>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {plans.map((p) => (
+              <div key={p.id} className="card p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-extrabold text-slate-900">{p.name}</h3>
+                  <span className="chip">{p.id}</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-slate-500">الحصّة (تحليلات)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={p.quota}
+                      onChange={(e) => editPlan(p.id, "quota", Number(e.target.value))}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-slate-500">شهري (ريال / شهر)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      disabled={p.id === "free"}
+                      value={Math.round(p.monthlyHalalas / 100)}
+                      onChange={(e) =>
+                        editPlan(p.id, "monthlyHalalas", Math.round(Number(e.target.value) * 100))
+                      }
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-50"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-slate-500">سنوي (ريال / شهر يُحاسب سنوياً)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      disabled={p.id === "free"}
+                      value={Math.round(p.annualHalalas / 100)}
+                      onChange={(e) =>
+                        editPlan(p.id, "annualHalalas", Math.round(Number(e.target.value) * 100))
+                      }
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-50"
+                    />
+                  </label>
+                </div>
+                <button
+                  onClick={() => savePlan(p)}
+                  className="btn-primary mt-4 w-full py-2.5 text-sm"
+                >
+                  {savedPlan === p.id ? (
+                    <>
+                      <Check className="h-4 w-4" /> تم الحفظ
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> حفظ
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Reveal>
 
         {/* users */}
         <Reveal className="mt-10">

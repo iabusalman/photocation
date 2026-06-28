@@ -1,25 +1,21 @@
 import { User } from '@prisma/client';
 import { prisma } from '../prisma';
-import { PLANS, PlanId } from './plans';
+import { getPlan } from './plans';
 
 export interface QuotaState {
-  plan: PlanId;
+  plan: string;
   used: number;
   limit: number;
   remaining: number;
   resetAt: Date | null;
 }
 
-function planOf(user: User): PlanId {
-  return (user.plan as PlanId) in PLANS ? (user.plan as PlanId) : 'free';
-}
-
 /**
- * Returns the user's current quota, rolling the usage window over if a
- * resetting plan's window has elapsed (persisted lazily on read).
+ * Returns the user's current quota, rolling the usage window over if the
+ * window has elapsed (persisted lazily on read).
  */
 export async function getQuota(user: User): Promise<QuotaState> {
-  const plan = PLANS[planOf(user)];
+  const plan = await getPlan(user.plan);
   let used = user.usageCount;
   let resetAt = user.usageResetAt;
 

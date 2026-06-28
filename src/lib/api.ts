@@ -102,6 +102,15 @@ export interface AnalysisResult {
   createdAt: string;
 }
 
+export interface PlanDTO {
+  id: "free" | "starter" | "pro";
+  name: string;
+  quota: number;
+  windowDays?: number;
+  monthlyHalalas: number;
+  annualHalalas: number;
+}
+
 export interface Subscription {
   id: string;
   plan: "starter" | "pro";
@@ -150,6 +159,8 @@ export const api = {
     }),
   me: () => request<{ user: User; quota: Quota }>("/api/auth/me"),
 
+  plans: () => request<{ plans: PlanDTO[] }>("/api/plans"),
+
   analyze: (image: string, mediaType: string) =>
     request<{ analysis: AnalysisResult; quota: Quota }>("/api/analyze", {
       method: "POST",
@@ -188,4 +199,13 @@ export const api = {
     ),
   adminDeleteUser: (id: string) =>
     request<{ deleted: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" }),
+  adminPlans: () => request<{ plans: PlanDTO[] }>("/api/admin/plans"),
+  adminUpdatePlan: (
+    id: string,
+    data: { name?: string; quota?: number; monthlyHalalas?: number; annualHalalas?: number },
+  ) =>
+    request<{ plan: PlanDTO }>(`/api/admin/plans/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 };

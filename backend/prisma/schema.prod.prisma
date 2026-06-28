@@ -73,3 +73,15 @@ model Analysis {
   reasoning   String?
   createdAt   DateTime @default(now())
 }
+
+// Editable subscription plan config (prices/quotas), managed from /admin.
+model Plan {
+  id             String   @id // "free" | "starter" | "pro"
+  name           String
+  quota          Int
+  windowDays     Int
+  monthlyHalalas Int      @default(0)
+  annualHalalas  Int      @default(0)
+  sortOrder      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}

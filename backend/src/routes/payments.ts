@@ -4,7 +4,7 @@ import { prisma } from '../prisma';
 import { env } from '../env';
 import { requireAuth } from '../middleware/auth';
 import { badRequest, forbidden, notFound } from '../lib/http';
-import { checkoutAmount, isPaidPlan } from '../services/plans';
+import { checkoutAmount, getPlan, isPaidPlan } from '../services/plans';
 import { fetchPayment, MoyasarPayment } from '../services/moyasar';
 import { reconcileSubscription } from '../services/subscriptions';
 
@@ -58,7 +58,9 @@ paymentsRouter.post('/subscribe', requireAuth, async (req, res, next) => {
     const { plan, billing } = subscribeSchema.parse(req.body);
     if (!isPaidPlan(plan)) throw badRequest('Plan is not purchasable');
 
-    const amount = checkoutAmount(plan, billing);
+    const planConfig = await getPlan(plan);
+    const amount = checkoutAmount(planConfig, billing);
+    if (amount <= 0) throw badRequest('Plan is not purchasable');
     const sub = await prisma.subscription.create({
       data: {
         userId: req.user!.sub,

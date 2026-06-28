@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth';
 import { requireAdmin } from '../middleware/admin';
 import { badRequest, notFound } from '../lib/http';
 import { isAdminEmail } from '../env';
+import { getAllPlans } from '../services/plans';
 
 export const adminRouter = Router();
 
@@ -122,6 +123,39 @@ adminRouter.delete('/users/:id', async (req, res, next) => {
       prisma.user.delete({ where: { id } }),
     ]);
     res.json({ deleted: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/plans — editable plan config.
+adminRouter.get('/plans', async (_req, res, next) => {
+  try {
+    const plans = await getAllPlans();
+    res.json({ plans });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const updatePlanSchema = z.object({
+  name: z.string().trim().min(1).max(60).optional(),
+  quota: z.number().int().min(0).max(1_000_000).optional(),
+  monthlyHalalas: z.number().int().min(0).max(100_000_000).optional(),
+  annualHalalas: z.number().int().min(0).max(100_000_000).optional(),
+});
+
+// PATCH /api/admin/plans/:id — update a plan's price/quota.
+adminRouter.patch('/plans/:id', async (req, res, next) => {
+  try {
+    const data = updatePlanSchema.parse(req.body);
+    if (Object.keys(data).length === 0) throw badRequest('Nothing to update');
+
+    const exists = await prisma.plan.findUnique({ where: { id: req.params.id } });
+    if (!exists) throw notFound('Plan not found');
+
+    const plan = await prisma.plan.update({ where: { id: req.params.id }, data });
+    res.json({ plan });
   } catch (err) {
     next(err);
   }

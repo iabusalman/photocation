@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Check, Sparkles, Zap, Building2, CreditCard, ShieldCheck } from "lucide-react";
 import Reveal from "../components/Reveal";
 import { useAuth } from "../lib/auth";
+import { api } from "../lib/api";
 
 const plans = [
   {
@@ -62,6 +63,26 @@ export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
+  // Live prices (in SAR) fetched from the backend, editable from /admin.
+  const [prices, setPrices] = useState<
+    Record<string, { monthly: number; annual: number }>
+  >({});
+  useEffect(() => {
+    api
+      .plans()
+      .then((r) => {
+        const map: Record<string, { monthly: number; annual: number }> = {};
+        for (const pl of r.plans) {
+          map[pl.id] = {
+            monthly: pl.monthlyHalalas / 100,
+            annual: pl.annualHalalas / 100,
+          };
+        }
+        setPrices(map);
+      })
+      .catch(() => {});
+  }, []);
+
   // Free plan → register; paid plans → checkout (or login first).
   function choosePlan(planId: string) {
     if (planId === "free") {
@@ -118,7 +139,10 @@ export default function Pricing() {
 
         <div className="mx-auto mt-14 grid max-w-6xl items-stretch gap-6 lg:grid-cols-3">
           {plans.map((p, i) => {
-            const price = annual ? p.annual : p.monthly;
+            const live = prices[p.id];
+            const monthlyPrice = live?.monthly ?? p.monthly;
+            const annualPrice = live?.annual ?? p.annual;
+            const price = annual ? annualPrice : monthlyPrice;
             return (
               <Reveal key={p.id} delay={i * 0.08} className="h-full">
                 <div
@@ -154,11 +178,10 @@ export default function Pricing() {
                     <span className="font-display text-5xl font-extrabold text-slate-900">{price}</span>
                     <span className="mb-1.5 text-sm text-slate-500">ريال{price > 0 ? " / شهر" : ""}</span>
                   </div>
-                  {p.id === "starter" && annual && (
-                    <div className="mt-1 text-xs font-semibold text-accent-green">يُحاسب 108 ريال سنوياً</div>
-                  )}
-                  {p.id === "pro" && annual && (
-                    <div className="mt-1 text-xs font-semibold text-accent-green">يُحاسب 348 ريال سنوياً</div>
+                  {annual && annualPrice > 0 && (
+                    <div className="mt-1 text-xs font-semibold text-accent-green">
+                      يُحاسب {(annualPrice * 12).toLocaleString("ar-SA")} ريال سنوياً
+                    </div>
                   )}
 
                   <button
