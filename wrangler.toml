@@ -1,0 +1,10 @@
+name = "photocation"
+compatibility_date = "2024-09-23"
+
+# Static-assets-only deployment (Cloudflare Workers Static Assets). The Vite
+# build outputs to ./dist, and `wrangler deploy` uploads it as static assets.
+# single-page-application handling serves index.html for any unmatched route,
+# so client-side routing (wouter) works on deep links / refresh.
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
