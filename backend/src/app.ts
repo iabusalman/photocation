@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { corsOrigins, env } from './env';
+import { isAllowedOrigin, env } from './env';
 import { authRouter } from './routes/auth';
 import { plansRouter } from './routes/plans';
 import { paymentsRouter } from './routes/payments';
@@ -17,7 +17,7 @@ export function createApp() {
   app.use(
     cors({
       origin: (origin, cb) => {
-        if (!origin || corsOrigins.includes(origin)) return cb(null, true);
+        if (!origin || isAllowedOrigin(origin)) return cb(null, true);
         return cb(new Error(`Origin ${origin} not allowed by CORS`));
       },
       credentials: true,

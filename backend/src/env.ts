@@ -51,6 +51,22 @@ export const corsOrigins = env.CORS_ORIGINS.split(',')
   .map((o) => o.trim())
   .filter(Boolean);
 
+// Allow an origin if it is explicitly listed, or if it matches one of these
+// host patterns. The patterns cover Cloudflare Pages (production + every
+// random preview subdomain like abc123.photocation.pages.dev) and Netlify,
+// so previews work without listing each generated URL in CORS_ORIGINS.
+const corsHostPatterns = [/\.pages\.dev$/, /\.netlify\.app$/];
+
+export function isAllowedOrigin(origin: string): boolean {
+  if (corsOrigins.includes(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return corsHostPatterns.some((re) => re.test(hostname));
+  } catch {
+    return false;
+  }
+}
+
 export const appleAudiences = [env.APPLE_CLIENT_ID, env.APPLE_BUNDLE_ID].filter(
   (v): v is string => Boolean(v),
 );
