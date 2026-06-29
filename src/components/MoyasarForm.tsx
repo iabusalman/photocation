@@ -1,31 +1,38 @@
 import { useEffect, useRef } from "react";
 import type { SubscribeInit } from "../lib/api";
+import { loadScript, loadStyle } from "../lib/loadScript";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_MOYASAR_PUBLISHABLE_KEY;
+const MOYASAR_CSS = "https://cdn.moyasar.com/mpf/1.15.0/moyasar.css";
+const MOYASAR_JS = "https://cdn.moyasar.com/mpf/1.15.0/moyasar.js";
 
 /**
- * Mounts the hosted Moyasar payment form. The form creates the payment with
- * Moyasar directly (publishable key) and then redirects to the callback URL,
- * where the backend verifies the result server-side.
+ * Mounts the hosted Moyasar payment form. The Moyasar SDK is loaded on demand
+ * (only here, not on every page) so it never blocks initial render.
  */
 export default function MoyasarForm({ init }: { init: SubscribeInit }) {
   const mounted = useRef(false);
 
   useEffect(() => {
-    if (mounted.current || !window.Moyasar) return;
     const key = init.publishableKey || PUBLISHABLE_KEY;
-    if (!key) return;
+    if (mounted.current || !key) return;
     mounted.current = true;
-    window.Moyasar.init({
-      element: ".moyasar-form",
-      amount: init.amount,
-      currency: init.currency,
-      description: init.description,
-      publishable_api_key: key,
-      callback_url: init.callbackUrl,
-      methods: ["creditcard", "applepay", "stcpay"],
-      metadata: init.metadata,
-    });
+    loadStyle(MOYASAR_CSS);
+    loadScript(MOYASAR_JS)
+      .then(() => {
+        if (!window.Moyasar) return;
+        window.Moyasar.init({
+          element: ".moyasar-form",
+          amount: init.amount,
+          currency: init.currency,
+          description: init.description,
+          publishable_api_key: key,
+          callback_url: init.callbackUrl,
+          methods: ["creditcard", "applepay", "stcpay"],
+          metadata: init.metadata,
+        });
+      })
+      .catch(() => {});
   }, [init]);
 
   const key = init.publishableKey || PUBLISHABLE_KEY;

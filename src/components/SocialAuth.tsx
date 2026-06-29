@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { loadScript } from "../lib/loadScript";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID;
 const APPLE_REDIRECT_URI = import.meta.env.VITE_APPLE_REDIRECT_URI;
+const GSI_SRC = "https://accounts.google.com/gsi/client";
+const APPLE_SRC =
+  "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
 
 function GoogleIcon() {
   return (
@@ -36,43 +40,56 @@ export default function SocialAuth({ mode = "login" }: { mode?: "login" | "regis
 
   // ── Google ──────────────────────────────────────────────
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !window.google?.accounts?.id) return;
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async (response: { credential: string }) => {
-        setError(null);
-        setBusy(true);
-        try {
-          const { token, user } = await api.loginGoogle(response.credential);
-          signInWithToken(token, user);
-          navigate("/analyze");
-        } catch (e) {
-          setError((e as Error).message);
-        } finally {
-          setBusy(false);
+    if (!GOOGLE_CLIENT_ID) return;
+    let cancelled = false;
+    loadScript(GSI_SRC)
+      .then(() => {
+        if (cancelled || !window.google?.accounts?.id) return;
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response: { credential: string }) => {
+            setError(null);
+            setBusy(true);
+            try {
+              const { token, user } = await api.loginGoogle(response.credential);
+              signInWithToken(token, user);
+              navigate("/analyze");
+            } catch (e) {
+              setError((e as Error).message);
+            } finally {
+              setBusy(false);
+            }
+          },
+        });
+        if (googleBtnRef.current) {
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            width: 320,
+            text: mode === "login" ? "signin_with" : "continue_with",
+            locale: "ar",
+          });
         }
-      },
-    });
-    if (googleBtnRef.current) {
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: "outline",
-        size: "large",
-        width: 320,
-        text: mode === "login" ? "signin_with" : "continue_with",
-        locale: "ar",
-      });
-    }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [mode, navigate, signInWithToken]);
 
   // ── Apple ───────────────────────────────────────────────
   useEffect(() => {
-    if (!APPLE_CLIENT_ID || !window.AppleID?.auth) return;
-    window.AppleID.auth.init({
-      clientId: APPLE_CLIENT_ID,
-      scope: "name email",
-      redirectURI: APPLE_REDIRECT_URI,
-      usePopup: true,
-    });
+    if (!APPLE_CLIENT_ID) return;
+    loadScript(APPLE_SRC)
+      .then(() => {
+        window.AppleID?.auth.init({
+          clientId: APPLE_CLIENT_ID,
+          scope: "name email",
+          redirectURI: APPLE_REDIRECT_URI,
+          usePopup: true,
+        });
+      })
+      .catch(() => {});
   }, []);
 
   async function handleApple() {

@@ -1,0 +1,13 @@
+# Deploy the Photocation frontend (Vite SPA) on Netlify.
+# In Netlify: New site → import this repo. Set the VITE_* environment variables
+# (same values as on Render's static site) under Site settings → Environment.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so client-side routes (wouter) work on refresh/deep links.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

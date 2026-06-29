@@ -10,17 +10,11 @@
       name="description"
       content="منصة ذكاء اصطناعي تحلّل صورك وتحدّد موقعها الجغرافي بدقة في ثوانٍ — الدولة، المدينة، الإحداثيات، والمعالم البارزة."
     />
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Sign in with Apple JS -->
-    <script
-      src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
-      async
-      defer
-    ></script>
-    <!-- Moyasar payment form -->
-    <link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.15.0/moyasar.css" />
-    <script src="https://cdn.moyasar.com/mpf/1.15.0/moyasar.js"></script>
+    <!-- Speed up the first connection to third-party CDNs (loaded on demand). -->
+    <link rel="preconnect" href="https://accounts.google.com" />
+    <link rel="preconnect" href="https://cdn.moyasar.com" />
+    <!-- Auth (Google/Apple) and Moyasar/PayPal scripts are loaded lazily, only
+         on the pages that use them, so they never block initial render. -->
   </head>
   <body>
     <div id="root"></div>
