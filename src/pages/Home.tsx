@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import {
   Sparkles,
   Upload,
@@ -117,11 +116,7 @@ export default function Home() {
           <Reveal delay={0.1} y={36}>
             <div className="relative">
               <div className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-tr from-brand-200/40 to-cyan-200/40 blur-2xl" />
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                className="rounded-3xl border border-slate-200 bg-white p-3 shadow-lift"
-              >
+              <div className="pc-float-a rounded-3xl border border-slate-200 bg-white p-3 shadow-lift">
                 {/* uploaded image */}
                 <div className="relative mb-3 overflow-hidden rounded-2xl">
                   <div className="relative flex h-44 items-end justify-between bg-gradient-to-tr from-[#9ec3f0] via-[#cfe0f6] to-[#eaf2fb] p-4">
@@ -156,14 +151,10 @@ export default function Home() {
                 </div>
 
                 <MapResult />
-              </motion.div>
+              </div>
 
               {/* floating badge */}
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-lift sm:block"
-              >
+              <div className="pc-float-b absolute -bottom-5 -left-5 hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-lift sm:block">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-green-50 text-accent-green">
                     <Zap className="h-4 w-4" />
@@ -173,7 +164,7 @@ export default function Home() {
                     <div className="text-sm font-extrabold text-slate-900">2.4 ثانية</div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </Reveal>
         </div>
