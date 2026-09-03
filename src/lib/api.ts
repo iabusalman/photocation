@@ -16,6 +16,25 @@ export interface ApiError extends Error {
   details?: unknown;
 }
 
+/**
+ * Fire-and-forget ping that wakes a sleeping backend (e.g. Render free tier
+ * cold-starts in 30–60s). Called on app load so the server is warming up while
+ * the visitor reads the landing page — by the time they log in or analyse a
+ * photo, the API is already awake instead of hanging on first request.
+ */
+let warmed = false;
+export function warmBackend(): void {
+  if (warmed) return;
+  warmed = true;
+  try {
+    void fetch(`${API_BASE}/health`, { method: "GET", cache: "no-store" }).catch(
+      () => {},
+    );
+  } catch {
+    /* ignore — best effort */
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
