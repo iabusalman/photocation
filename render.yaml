@@ -3,11 +3,11 @@
 # secret env vars marked `sync: false` (keys, URLs) in the dashboard.
 # Docs: https://render.com/docs/blueprint-spec
 
-databases:
-  - name: photocation-db
-    databaseName: photocation
-    user: photocation
-    plan: free
+# NOTE: The database is no longer a Render-managed free Postgres (those are
+# deleted after ~30 days, which took the API down). DATABASE_URL is now set
+# manually in the dashboard to an external, permanent Postgres (e.g. Neon's
+# free tier). Put the DB in the same region as the API (Oregon / US-West) for
+# low query latency.
 
 services:
   # ── Backend API ────────────────────────────────────────
@@ -19,10 +19,9 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
+      # Set to an external Postgres connection string (Neon) in the dashboard.
       - key: DATABASE_URL
-        fromDatabase:
-          name: photocation-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV
